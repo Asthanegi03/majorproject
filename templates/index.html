@@ -1,0 +1,202 @@
+{% extends 'base.html' %}
+
+{% block title %}DeepfakeSoundShield - Audio Deepfake Detection{% endblock %}
+
+{% block content %}
+<div class="container-fluid p-0">
+    <div class="hero-section">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-md-7">
+                    <h1 class="display-4 fw-bold">Synthetic Audio Shield</h1>
+                    <p class="lead text-light mb-4">Synthetic Audio Detection System</p>
+                    <p class="text-light mb-5">Using multiple neural network architectures to detect AI-generated audio with 80% accuracy</p>
+                    <div class="d-grid gap-3 d-md-flex justify-content-md-start mb-4 mb-lg-3">
+                        <a href="#upload" class="btn btn-primary btn-lg px-5 me-md-2 fw-bold">
+                            <i class="fas fa-microphone-alt me-2"></i>Analyze Audio
+                        </a>
+                        <a href="#learn-more" class="btn btn-outline-light btn-lg px-4">
+                            <i class="fas fa-info-circle me-2"></i>Learn More
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-5 d-none d-md-block text-center">
+                    <div class="hero-animation">
+                        <i class="fas fa-wave-square fa-4x" style="color: var(--accent-color);"></i>
+                        <div class="wave-container">
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                            <div class="wave"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="container">
+        <!-- Flash Messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        <div class="row mb-5">
+            <div class="col-lg-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h3>Multi-Model Analysis</h3>
+                    <p>Combines predictions from 5 different neural network architectures for highly accurate detection.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-chart-bar"></i>
+                    </div>
+                    <h3>Dual Feature Extraction</h3>
+                    <p>Analyzes both MFCC and spectrogram features to catch different types of deepfake artifacts.</p>
+                </div>
+            </div>
+            <div class="col-lg-4 mb-4">
+                <div class="feature-card text-center">
+                    <div class="feature-icon">
+                        <i class="fas fa-shield-alt"></i>
+                    </div>
+                    <h3>GPU-Accelerated</h3>
+                    <p>Processes even large audio files efficiently with GPU acceleration for faster, more reliable results.</p>
+                </div>
+            </div>
+        </div>
+        
+        <div id="upload" class="row justify-content-center mb-5">
+            <div class="col-lg-8">
+                <div class="card shadow-lg border-0">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="h3 mb-0"><i class="fas fa-microphone-alt me-2"></i> Analyze Your Audio</h2>
+                    </div>
+                    <div class="card-body p-4">
+                        <p class="lead text-center mb-4">Upload an audio file to check if it's genuine or AI-generated</p>
+                        
+                        <form action="/upload" method="post" enctype="multipart/form-data" id="upload-form">
+                            <div class="upload-area shadow-sm" id="drop-area">
+                                <div class="upload-icon">
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                </div>
+                                <h4>Drag & Drop Audio File Here</h4>
+                                <p>or</p>
+                                <input type="file" name="file" id="file" accept=".wav,.mp3,.flac,.ogg,.m4a,.aac,.wma" class="d-none">
+                                <button type="button" class="btn btn-primary btn-lg px-4 fw-bold" id="browse-button">
+                                    <i class="fas fa-folder-open me-2"></i> Browse Files
+                                </button>
+                                <div id="file-name" class="mt-3"></div>
+                                <div class="supported-formats mt-3">
+                                    <span class="badge bg-light text-dark me-1">.wav</span>
+                                    <span class="badge bg-light text-dark me-1">.mp3</span>
+                                    <span class="badge bg-light text-dark me-1">.flac</span>
+                                    <span class="badge bg-light text-dark me-1">.ogg</span>
+                                    <span class="badge bg-light text-dark me-1">.m4a</span>
+                                    <span class="badge bg-light text-dark me-1">.aac</span>
+                                    <span class="badge bg-light text-dark">.wma</span>
+                                </div>
+                            </div>
+                            
+                            <div class="progress-container my-4">
+                                <div class="progress" style="height: 25px;">
+                                    <div class="progress-bar progress-bar-striped progress-bar-animated bg-success" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                                </div>
+                                <p class="text-center mt-2" id="progress-text">Uploading...</p>
+                            </div>
+                            
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-success btn-lg px-5" id="submit-btn" disabled>
+                                    <i class="fas fa-analyze me-2"></i>Analyze Audio
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="learn-more" class="row mb-5">
+            <div class="col-12">
+                <div class="section-heading">
+                    <h2>How It Works</h2>
+                    <p class="text-muted">Our multi-model approach ensures high accuracy detection</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="model-box">
+                    <div class="model-icon text-primary">
+                        <i class="fas fa-wave-square"></i>
+                    </div>
+                    <h4>Feature Extraction</h4>
+                    <p>We extract both MFCC (Mel-frequency cepstral coefficients) and spectrogram features from your audio. These represent different aspects of the sound that can reveal deepfake artifacts.</p>
+                    <p>Our GPU-accelerated system efficiently processes these features, even for large files, by analyzing key segments of the audio.</p>
+                </div>
+            </div>
+            
+            <div class="col-md-6 mb-4">
+                <div class="model-box">
+                    <div class="model-icon text-info">
+                        <i class="fas fa-layer-group"></i>
+                    </div>
+                    <h4>Ensemble Prediction</h4>
+                    <p>The extracted features are analyzed by five different neural network architectures running in parallel on GPU: ANN, CNN, RNN, LSTM, and GAN-based detector.</p>
+                    <p>Results from all models are combined using a weighted ensemble approach that accounts for each model's confidence and historical performance.</p>
+                </div>
+            </div>
+            
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="model-box text-center">
+                            <div class="model-icon text-primary">
+                                <i class="fas fa-network-wired"></i>
+                            </div>
+                            <h4>ANN Model</h4>
+                            <p>Artificial Neural Network specialized in detecting patterns in flattened audio features.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="model-box text-center">
+                            <div class="model-icon text-info">
+                                <i class="fas fa-project-diagram"></i>
+                            </div>
+                            <h4>CNN Model</h4>
+                            <p>Convolutional Neural Network that excels at identifying visual patterns in spectrograms.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="model-box text-center">
+                            <div class="model-icon text-warning">
+                                <i class="fas fa-random"></i>
+                            </div>
+                            <h4>GAN Model</h4>
+                            <p>Specialized in detecting artifacts created by generative adversarial networks.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading overlay (hidden by default) -->
+<div id="loading-overlay" class="d-none">
+    <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="text-center text-light mt-3">Processing your audio file...</p>
+</div>
+{% endblock %}

@@ -1,0 +1,274 @@
+{% extends 'base.html' %}
+
+{% block title %}Analysis Results - DeepfakeSoundShield{% endblock %}
+
+{% block content %}
+<div class="container mt-4 mb-5">
+    <div class="row">
+        <div class="col-lg-10 offset-lg-1">
+            <div class="card shadow-lg">
+                <div class="card-header bg-dark">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-chart-bar text-primary me-3 fs-2 glow-primary"></i>
+                            <h2 class="mb-0 fw-bold">Analysis Results</h2>
+                        </div>
+                        <a href="{{ url_for('index') }}" class="btn btn-outline-light">
+                            <i class="fas fa-arrow-left me-2"></i> Back
+                        </a>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <!-- Verdict Card -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="verdict-card {{ 'verdict-fake' if results.final_verdict == 'Fake' else 'verdict-real' }} d-flex align-items-center">
+                                <div class="me-4 fs-1">
+                                    {% if results.final_verdict == 'Fake' %}
+                                        <i class="fas fa-exclamation-triangle text-danger glow-danger"></i>
+                                    {% else %}
+                                        <i class="fas fa-check-circle text-success glow-success"></i>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <h3 class="alert-heading mb-2">Final Verdict: {{ results.final_verdict }}</h3>
+                                    <p class="mb-0 fs-5">
+                                        {% if results.final_verdict == 'Fake' %}
+                                            Our analysis indicates this audio is likely <span class="text-danger fw-bold">AI-generated</span> with 
+                                            <span class="text-danger fw-bold">{{ results.ensemble_confidence|round(1) }}%</span> confidence.
+                                        {% else %}
+                                            Our analysis indicates this audio is likely <span class="text-success fw-bold">authentic</span> with 
+                                            <span class="text-success fw-bold">{{ 100 - results.ensemble_confidence|round(1) }}%</span> confidence.
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- File information -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-file-audio text-primary me-2"></i> File Information</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center mb-3">
+                                        <i class="fas fa-music text-primary me-3 fs-1"></i>
+                                        <div>
+                                            <h5 class="mb-1 text-light">{{ results.filename }}</h5>
+                                            <p class="mb-0 text-secondary">Size: {{ results.original_size|round(1) }} MB</p>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if results.was_trimmed %}
+                                    <div class="alert alert-info d-flex align-items-center mt-3" style="background-color: rgb(94, 30, 30);">
+                                        <i class="fas fa-cut me-3 fs-4"></i>
+                                        <div>
+                                            <strong>Intelligent Trimming Applied</strong>
+                                            <p class="small mb-0 mt-1">This large file was intelligently trimmed to extract the most relevant segments for analysis, focusing on the beginning, middle, and end portions while maintaining detection accuracy.</p>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visualization -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-chart-pie text-primary me-2"></i> Model Confidence Visualization</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-light mb-3">
+                                        <i class="fas fa-info-circle text-info me-2"></i>
+                                        Higher values indicate greater confidence that the audio is AI-generated (fake).
+                                        Values above 50% suggest the model detected synthetic patterns.
+                                    </p>
+                                    <div class="visualization-container">
+                                        <img src="{{ url_for('static', filename='results/prediction_' + session_id + '.png') }}" class="img-fluid rounded" alt="Model confidence chart">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Audio Features Visualizations -->
+                    <div class="row mb-4">
+                        <!-- MFCC Features -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-wave-square text-primary me-2"></i> MFCC Features</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-light mb-3">
+                                        <i class="fas fa-info-circle text-info me-2"></i>
+                                        Mel-frequency cepstral coefficients (MFCCs) represent the short-term power spectrum of sound, 
+                                        revealing distinctive patterns in deepfakes.
+                                    </p>
+                                    <div class="visualization-container">
+                                        <img src="{{ url_for('static', filename=results.mfcc_path) }}" class="img-fluid rounded" alt="MFCC visualization">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Spectrogram -->
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-broadcast-tower text-primary me-2"></i> Spectrogram Analysis</h5>
+                                </div>
+                                <div class="card-body">
+                                    <p class="text-light mb-3">
+                                        <i class="fas fa-info-circle text-info me-2"></i>
+                                        The spectrogram shows energy distribution across frequencies over time. AI-generated audio often 
+                                        displays distinctive harmonic patterns and frequency artifacts.
+                                    </p>
+                                    <div class="visualization-container">
+                                        <img src="{{ url_for('static', filename=results.spectrogram_path) }}" class="img-fluid rounded" alt="Spectrogram visualization">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed model analysis -->
+                    <div class="row mb-4">
+                        <div class="col-md-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h5 class="mb-0"><i class="fas fa-microscope text-primary me-2"></i> Detailed Model Analysis</h5>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover table-dark border-secondary">
+                                            <thead>
+                                                <tr>
+                                                    <th>Model</th>
+                                                    <th>Prediction</th>
+                                                    <th>Confidence</th>
+                                                    <th>Specialization</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td><i class="fas fa-brain text-primary me-2"></i> ANN</td>
+                                                    <td class="{{ 'text-danger' if results.ann_prediction == 'Fake' else 'text-success' }}">
+                                                        <strong>{{ results.ann_prediction }}</strong>
+                                                    </td>
+                                                    <td style="width: 30%">
+                                                        <div class="progress" role="progressbar">
+                                                            <div class="progress-bar {{ 'bg-danger' if results.ann_prediction == 'Fake' else 'bg-success' }}" 
+                                                                 style="width: {{ results.ann_confidence }}%">
+                                                                {{ results.ann_confidence|round(1) }}%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>Spectral patterns</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><i class="fas fa-project-diagram text-info me-2"></i> CNN</td>
+                                                    <td class="{{ 'text-danger' if results.cnn_prediction == 'Fake' else 'text-success' }}">
+                                                        <strong>{{ results.cnn_prediction }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <div class="progress" role="progressbar">
+                                                            <div class="progress-bar {{ 'bg-danger' if results.cnn_prediction == 'Fake' else 'bg-success' }}" 
+                                                                 style="width: {{ results.cnn_confidence }}%">
+                                                                {{ results.cnn_confidence|round(1) }}%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>Local features</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><i class="fas fa-random text-warning me-2"></i> RNN</td>
+                                                    <td class="{{ 'text-danger' if results.rnn_prediction == 'Fake' else 'text-success' }}">
+                                                        <strong>{{ results.rnn_prediction }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <div class="progress" role="progressbar">
+                                                            <div class="progress-bar {{ 'bg-danger' if results.rnn_prediction == 'Fake' else 'bg-success' }}" 
+                                                                 style="width: {{ results.rnn_confidence }}%">
+                                                                {{ results.rnn_confidence|round(1) }}%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>Temporal patterns</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><i class="fas fa-memory text-success me-2"></i> LSTM</td>
+                                                    <td class="{{ 'text-danger' if results.lstm_prediction == 'Fake' else 'text-success' }}">
+                                                        <strong>{{ results.lstm_prediction }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <div class="progress" role="progressbar">
+                                                            <div class="progress-bar {{ 'bg-danger' if results.lstm_prediction == 'Fake' else 'bg-success' }}" 
+                                                                 style="width: {{ results.lstm_confidence }}%">
+                                                                {{ results.lstm_confidence|round(1) }}%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>Long-term dependencies</td>
+                                                </tr>
+                                                <tr>
+                                                    <td><i class="fas fa-robot text-danger me-2"></i> GAN</td>
+                                                    <td class="{{ 'text-danger' if results.gan_prediction == 'Fake' else 'text-success' }}">
+                                                        <strong>{{ results.gan_prediction }}</strong>
+                                                    </td>
+                                                    <td>
+                                                        <div class="progress" role="progressbar">
+                                                            <div class="progress-bar {{ 'bg-danger' if results.gan_prediction == 'Fake' else 'bg-success' }}" 
+                                                                 style="width: {{ results.gan_confidence }}%">
+                                                                {{ results.gan_confidence|round(1) }}%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td>GAN artifacts</td>
+                                                </tr>
+                                                <tr class="bg-dark-subtle">
+                                                    <td class="fw-bold"><i class="fas fa-layer-group text-primary me-2"></i> Ensemble</td>
+                                                    <td class="{{ 'text-danger' if results.ensemble_prediction == 'Fake' else 'text-success' }} fw-bold fs-5">
+                                                        {{ results.ensemble_prediction }}
+                                                    </td>
+                                                    <td>
+                                                        <div class="progress" role="progressbar">
+                                                            <div class="progress-bar {{ 'bg-danger' if results.ensemble_prediction == 'Fake' else 'bg-success' }}" 
+                                                                 style="width: {{ results.ensemble_confidence }}%">
+                                                                {{ results.ensemble_confidence|round(1) }}%
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td class="fw-bold">Combined analysis</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Action buttons -->
+                    <div class="row mt-4">
+                        <div class="col-md-12 text-center">
+                            <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg me-3">
+                                <i class="fas fa-home me-2"></i> Back to Home
+                            </a>
+                            <a href="#" class="btn btn-outline-info btn-lg" onclick="window.print()">
+                                <i class="fas fa-print me-2"></i> Print Results
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
